@@ -4,6 +4,7 @@ import json
 from uuid import uuid4
 
 import parsers.mappings.mappings
+from postprocess.postprocessors import postprocessors
 
 from ir.record import Record
 from utils.logs import logger
@@ -63,6 +64,10 @@ class BaseParser:
 
                         # if self.file_path.endswith(".csv"):
                         #     print(json.dumps(record_dict, indent=2))
+
+                        # Apply postprocessors if any exist
+                        for name, postprocessor in postprocessors.items():
+                            record_dict = postprocessor(record_dict)
 
                         output_file.write(json.dumps(record_dict) + "\n")
                         record_count += 1
