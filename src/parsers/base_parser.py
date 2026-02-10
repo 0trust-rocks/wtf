@@ -1,3 +1,4 @@
+import os
 import re
 import json
 from uuid import uuid4
@@ -14,7 +15,11 @@ class BaseParser:
 
     def __init__(self, file_path, output_path=None):
         self.file_path = file_path
-        self.output_path = output_path if output_path else file_path + ".jsonl"
+        # If output path is a folder
+        if output_path and os.path.isdir(output_path):
+            self.output_path = os.path.join(output_path, os.path.basename(file_path) + ".jsonl")
+        else:
+            self.output_path = output_path if output_path else file_path + ".jsonl"
 
     def associate_key(self, key):
         return parsers.mappings.mappings.get_mapping(key)
@@ -32,31 +37,42 @@ class BaseParser:
         raise NotImplementedError("Subclasses must implement the get_itr method")
 
     def parse(self):
-        # with open(self.output_path, 'w') as output_file:
-        for record in self.get_itr():
-            try:
-                std_record = Record()
-                for key, value in record.items():
-                    mapped_key = self.associate_key(key)
-                    values = self.parse_value(mapped_key, value, record) if mapped_key else None
+        record_count = 0
+        with open(self.output_path, 'w') as output_file:
+            for record in self.get_itr():
+                try:
+                    std_record = Record()
+                    for key, value in record.items():
+                        mapped_key = self.associate_key(key)
+                        values = self.parse_value(mapped_key, value, record) if mapped_key else None
 
-                    if not values:
-                        # logger.warning(f"Unmapped key: {key} with value: {value}")
-                        continue
+                        if not values:
+                            # logger.warning(f"Unmapped key: {key} with value: {value}")
+                            continue
 
-                    for newValue in values:
-                        for k, v in newValue.items():
-                            if v is not None and v != "":
-                                std_record.add_or_set_value(k, v)
+                        for newValue in values:
+                            for k, v in newValue.items():
+                                if v is not None and v != "":
+                                    std_record.add_or_set_value(k, v)
 
-                record_dict = std_record.to_dict()
-                if "line" not in record_dict:
-                    record_dict["line"] = json.dumps(record, indent=2)
+                    record_dict = std_record.to_dict()
 
-                if self.file_path.endswith(".csv"):
-                    print(json.dumps(record_dict, indent=2))
+                    if len(record_dict) > 2:
+                        if "line" not in record_dict:
+                            record_dict["line"] = json.dumps(record, indent=2)
 
-                # output_file.write(json.dumps(std_record.to_dict()) + "\n")
+                        # if self.file_path.endswith(".csv"):
+                        #     print(json.dumps(record_dict, indent=2))
 
-            except Exception as e:
-                logger.error(f"Error parsing record: {record}\nError: {e}")
+                        output_file.write(json.dumps(record_dict) + "\n")
+                        record_count += 1
+
+                except Exception as e:
+                    logger.error(f"Error parsing record: {record}\nError: {e}")
+
+        if record_count == 0:
+            logger.info(f"No records found in file: {self.file_path}")
+            # Delete the empty output file
+            os.remove(self.output_path)
+        else:
+            logger.info(f"Finished parsing file: {self.file_path}. Total records: {record_count}. Output written to: {self.output_path}")

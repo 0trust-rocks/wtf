@@ -40,7 +40,6 @@ def extract(address: str, original: dict):
         'postcode'
     ]
     
-
     newAddressString = address
 
     if 'city' in original and original['city'] not in address:

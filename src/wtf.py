@@ -16,7 +16,7 @@ def main():
     argparser = argparse.ArgumentParser(description='WTF Parser')
     argparser.add_argument('input', help='The file or folder to parse')
 
-    argparser.add_argument('-o', '--output', help='Output file path', required=False)
+    argparser.add_argument('-o', '--output', help='Output path', required=False)
     argparser.add_argument('-p', '--parser', help='Specify which parser to use', choices=parsers.keys(), required=False)
     argparser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose logging')
 
@@ -35,6 +35,11 @@ def main():
         for file_path in glob.glob(os.path.join(args.input, '**/*'), recursive=True):
             if os.path.isfile(file_path):
                 files.append(file_path)
+
+        if args.output:
+            # Create output directory if it doesn't exist
+            os.makedirs(args.output, exist_ok=True)
+
     elif os.path.isfile(args.input):
         logger.info(f"Input is a file. Processing: {args.input}")
         files.append(args.input)
@@ -66,7 +71,7 @@ def main():
                     logger.error("No generic parser found. Skipping file.")
                     return
 
-            parser = parser_class(file)
+            parser = parser_class(file, output_path=args.output)
             parser.parse()
         except Exception as e:
             logger.error(f"Error processing file: {file}\nError: {e}")
