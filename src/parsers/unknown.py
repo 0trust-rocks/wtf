@@ -1,23 +1,11 @@
 # Generic parser for unknown text formats. It will make the best attempt to extract data using regex.
-import os
-import urllib
-import re
+import urllib.parse
 
 from utils.fingerprint_unknown import fingerprint_type
 from utils.logs import logger
+from utils.regex import EMAIL_REGEX, URL_ENCODED_EMAIL_REGEX, URL_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, BCRYPT_REGEX, IP_REGEX
 from parsers.base_parser import BaseParser
 from ir.record import Record
-
-EMAIL_REGEX = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
-URL_ENCODED_EMAIL_REGEX = re.compile(r'[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+%2E[a-zA-Z]{2,}')
-
-URL_REGEX = re.compile(r'https?://[^\s]+')
-SHA1_REGEX = re.compile(r'\b[a-fA-F0-9]{40}\b')
-SHA256_REGEX = re.compile(r'\b[a-fA-F0-9]{64}\b')
-SHA512_REGEX = re.compile(r'\b[a-fA-F0-9]{128}\b')
-BCRYPT_REGEX = re.compile(r'\$2[aby]?\$\d{2}\$[./A-Za-z0-9]{53}')
-IP_REGEX = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
-
 
 class UnknownParser(BaseParser):
     _EXTENSIONS = [".txt"]

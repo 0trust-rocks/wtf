@@ -9,7 +9,7 @@ mappings = json.load(open(mappings_path, 'r'))
 
 custom_handlers = {}
 
-def get_mapping(key):
+def get_mapping(key, detectedFields={}):
     if key in mappings:
         return key
     
@@ -18,7 +18,15 @@ def get_mapping(key):
     for k, v in mappings.items():
         if lower in v:
             return k
-    
+
+    # Check if any detected fields match this key (i.e email fields detected by Regex)
+    if len(detectedFields) > 0:
+        if key in detectedFields:
+            detected_type = detectedFields[key]
+            for k, v in mappings.items():
+                if detected_type in v:
+                    return k
+
     return None
 
 def get_value(key: str, value: str, original: dict):

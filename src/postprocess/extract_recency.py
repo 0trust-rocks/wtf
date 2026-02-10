@@ -1,6 +1,9 @@
 import re
 import time
 
+currentYear = time.localtime().tm_year
+currentMonth = time.localtime().tm_mon
+
 def extract(record):
     if "line" in record:
         line = record["line"]
@@ -10,7 +13,7 @@ def extract(record):
         mostRecentYear = None
         mostRecentMonth = None
         mostRecentDay = None
-    
+
         for date in dates:
             try:
                 if '-' in date:
@@ -23,6 +26,8 @@ def extract(record):
                 else:  # Format: MM-DD-YYYY
                     month, day, year = int(parts[0]), int(parts[1]), int(parts[2])
                 
+                if year > currentYear or (year == currentYear and month > currentMonth):
+                    continue  # Skip future dates
 
                 if mostRecentYear is None:
                     mostRecentYear = year
