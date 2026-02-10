@@ -57,8 +57,6 @@ class BaseParser:
                     elif IP_REGEX.match(value):
                         logger.debug(f"Detected potential IP field: {key} with value: {value}")
                         self.detectedFields[key] = "ips"
-                
-
 
     def get_itr(self):
         raise NotImplementedError("Subclasses must implement the get_itr method")
@@ -66,17 +64,21 @@ class BaseParser:
     def parse(self):
         record_count = 0
         self.detect_fields()
+        
+        key_mapping_cache = {}  # Cache key -> mapped_key
 
         with open(self.output_path, 'w') as output_file:
             for record in self.get_itr():
                 try:
                     std_record = Record()
                     for key, value in record.items():
-                        mapped_key = self.associate_key(key)
+                        # Use cached mapping or compute it once
+                        if key not in key_mapping_cache:
+                            key_mapping_cache[key] = self.associate_key(key)
+                        mapped_key = key_mapping_cache[key]
                         values = self.parse_value(mapped_key, value, record) if mapped_key else None
 
                         if not values:
-                            # logger.warning(f"Unmapped key: {key} with value: {value}")
                             continue
 
                         for newValue in values:
@@ -88,7 +90,7 @@ class BaseParser:
 
                     if len(record_dict) > 2:
                         if "line" not in record_dict:
-                            record_dict["line"] = json.dumps(record, indent=2)
+                            record_dict["line"] = json.dumps(record)
 
                         # Apply postprocessors if any exist
                         for name, postprocessor in postprocessors.items():
