@@ -3,6 +3,8 @@ import os
 import logging
 import argparse
 import glob
+
+from utils.fingerprint_unknown import fingerprint_type
 from utils.load_parsers import load_parsers
 from utils.logs import logger
 
@@ -50,7 +52,14 @@ def main():
 
             if not parser_class:
                 logger.error(f"No parser found for file extension: {file_extension}")
-                if parsers.get("unknown"):
+                # Attempt to fingerprint the file and find a matching parser
+                fingerprint = fingerprint_type(file)
+                logger.info(f"Fingerprint for file {file}: {fingerprint}")
+
+                if fingerprint in parsers:
+                    parser_class = parsers[fingerprint]
+                    logger.info(f"Found parser {parser_class.__name__} for fingerprint: {fingerprint}")
+                elif parsers.get("unknown"):
                     logger.info("Falling back to UnknownParser")
                     parser_class = parsers["unknown"]
                 else:

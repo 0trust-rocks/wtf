@@ -162,5 +162,8 @@
         "photos",
         "image",
         "images"
+    ],
+    "line": [
+        "line"
     ]
 }

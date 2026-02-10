@@ -21,12 +21,10 @@ class BaseParser:
 
     def parse_value(self, key, value, original):
         if key == "id":
-            # Ensure its a uuidv4
             if isinstance(value, str) and uuid4Re.match(value):
                 return [{key: value}]
             else:
-                logger.warning(f"Invalid UUIDv4 for key: {key} with value: {value}")
-                return 
+                return [{"id": str(uuid4())}]
 
         return parsers.mappings.mappings.get_value(key, value, original)
 
@@ -34,24 +32,24 @@ class BaseParser:
         raise NotImplementedError("Subclasses must implement the get_itr method")
 
     def parse(self):
-        with open(self.output_path, 'w') as output_file:
-            for record in self.get_itr():
-                try:
-                    std_record = Record()
-                    for key, value in record.items():
-                        mapped_key = self.associate_key(key)
-                        values = self.parse_value(mapped_key, value, record) if mapped_key else None
+        # with open(self.output_path, 'w') as output_file:
+        for record in self.get_itr():
+            try:
+                std_record = Record()
+                for key, value in record.items():
+                    mapped_key = self.associate_key(key)
+                    values = self.parse_value(mapped_key, value, record) if mapped_key else None
 
-                        if not values:
-                            # logger.warning(f"Unmapped key: {key} with value: {value}")
-                            continue
+                    if not values:
+                        # logger.warning(f"Unmapped key: {key} with value: {value}")
+                        continue
 
-                        for newValue in values:
-                            for k, v in newValue.items():
-                                if v is not None:
-                                    std_record.add_or_set_value(k, v)
+                    for newValue in values:
+                        for k, v in newValue.items():
+                            if v is not None:
+                                std_record.add_or_set_value(k, v)
 
-                    output_file.write(json.dumps(std_record.to_dict()) + "\n")
+                # output_file.write(json.dumps(std_record.to_dict()) + "\n")
 
-                except Exception as e:
-                    logger.error(f"Error parsing record: {record}\nError: {e}")
+            except Exception as e:
+                logger.error(f"Error parsing record: {record}\nError: {e}")
