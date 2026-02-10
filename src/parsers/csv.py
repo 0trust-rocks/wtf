@@ -9,8 +9,7 @@ from parsers.base_parser import BaseParser
 class CSVParser(BaseParser):
     _EXTENSIONS = ['.csv']
 
-    @staticmethod
-    def detect_encoding_and_bom(file_path):
+    def detect_encoding_and_bom(self, file_path):
         with open(file_path, 'rb') as f:
             raw_data = f.read(4)
         
@@ -50,12 +49,9 @@ class CSVParser(BaseParser):
         return ('utf-8', False)
 
     def get_itr(self):
-        # Detect encoding and BOM
         encoding, has_bom = self.detect_encoding_and_bom(self.file_path)
-
         logger.debug(f"Detected encoding: {encoding} for file: {self.file_path}")
         
-        # Open file with detected encoding
         with open(self.file_path, 'r', encoding=encoding) as f:
             reader = csv.DictReader(f)
             for row in reader:

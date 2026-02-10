@@ -69,7 +69,11 @@ class Record:
     # Additional Fields
     notes: List[str] = field(default_factory=list)
     photos: List[str] = field(default_factory=list)
-    
+
+    # How new is the data
+    recencyYear: Optional[int] = None
+    recencyMonth: Optional[int] = None
+    recencyDay: Optional[int] = None
 
     def __init__(self):
         self.id = None
