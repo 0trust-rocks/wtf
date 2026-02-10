@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from typing import Optional, List
 from dataclasses import dataclass, field
 
@@ -47,6 +49,7 @@ class Record:
     
     # Network Information
     ips: List[str] = field(default_factory=list)
+    imei: Optional[str] = None
     domain: Optional[str] = None
     asn: Optional[int] = None
     asnOrg: Optional[str] = None
@@ -69,7 +72,7 @@ class Record:
     
 
     def __init__(self):
-        self.id = ""
+        self.id = None
         self.firstName = None
         self.middleName = None
         self.lastName = None
@@ -109,7 +112,11 @@ class Record:
         self.photos = []
 
     def to_dict(self):
-        return {k: v for k, v in self.__dict__.items() if v is not None and v != []}
+        record = {k: v for k, v in self.__dict__.items() if v is not None and v != []}
+        # Add ID if not already present
+        if "id" not in record or record["id"] == "":
+            record["id"] = str(uuid4())
+        return record
     
     def add_or_set_value(self, key: str, value):
         if hasattr(self, key):

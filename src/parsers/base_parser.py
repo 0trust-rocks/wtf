@@ -46,8 +46,15 @@ class BaseParser:
 
                     for newValue in values:
                         for k, v in newValue.items():
-                            if v is not None:
+                            if v is not None and v != "":
                                 std_record.add_or_set_value(k, v)
+
+                record_dict = std_record.to_dict()
+                if "line" not in record_dict:
+                    record_dict["line"] = json.dumps(record, indent=2)
+
+                if self.file_path.endswith(".csv"):
+                    print(json.dumps(record_dict, indent=2))
 
                 # output_file.write(json.dumps(std_record.to_dict()) + "\n")
 

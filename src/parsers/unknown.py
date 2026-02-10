@@ -66,8 +66,6 @@ class UnknownParser(BaseParser):
                             for k, v in newValue.items():
                                 if v is not None:
                                     std_record.add_or_set_value(k, v)
-                    
-                    print(std_record.to_dict())
 
             except Exception as e:
                 logger.error(f"Error parsing record: {record}\nError: {e}")

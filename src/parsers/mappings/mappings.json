@@ -36,6 +36,27 @@
         "streetaddress",
         "addr"
     ],
+    "country": [
+        "country",
+        "country code"
+    ],
+    "state": [
+        "state"
+    ],
+    "city": [
+        "city"
+    ],
+    "postCode": [
+        "postal_code",
+        "postal-code",
+        "postalcode",
+        "postal code",
+        "zip",
+        "zip_code",
+        "zip-code",
+        "zipcode",
+        "zip code"
+    ],
     "latLon": [
         "latitude_longitude",
         "latitude-longitude",
@@ -162,6 +183,9 @@
         "photos",
         "image",
         "images"
+    ],
+    "imei": [
+        "imei"
     ],
     "line": [
         "line"
