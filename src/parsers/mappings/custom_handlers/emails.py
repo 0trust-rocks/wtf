@@ -33,6 +33,7 @@ publicEmailDomains = [
     "@mailbox.",
     "@cock.li",
     "@safe-mail.net",
+    "@msn."
 ]
 
 def extract(emails, original_key: str, original_dict: dict):

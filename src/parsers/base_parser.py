@@ -4,6 +4,8 @@ import orjson
 from uuid import uuid4
 
 import parsers.mappings.mappings
+
+from collections import defaultdict
 from postprocess.postprocessors import postprocessors
 
 from ir.record import Record
@@ -38,26 +40,36 @@ class BaseParser:
         return parsers.mappings.mappings.get_value(key, original_key, value, original)
 
     def detect_fields(self):
+        # Temporary storage to count occurrences: {field_name: {type: count}}
+        counts = defaultdict(lambda: defaultdict(int))
+
         for i, record in enumerate(self.get_itr()):
-            if i >= 100:
+            # Increased limit slightly to ensure we can hit 20 matches
+            if i >= 500: 
                 break
 
             for key, value in record.items():
-                if key in self.detectedFields:
+                # Skip if already finalized in a previous run
+                if key in self.detectedFields or not isinstance(value, str):
                     continue
-                if isinstance(value, str):
-                    if EMAIL_REGEX.match(value):
-                        logger.debug(f"Detected potential email field: {key} with value: {value}")
-                        self.detectedFields[key] = "emails"
-                    elif URL_REGEX.match(value):
-                        logger.debug(f"Detected potential URL field: {key} with value: {value}")
-                        self.detectedFields[key] = "urls"
-                    elif SHA1_REGEX.match(value) or SHA256_REGEX.match(value) or SHA512_REGEX.match(value) or BCRYPT_REGEX.match(value):
-                        logger.debug(f"Detected potential password field: {key} with value: {value}")
-                        self.detectedFields[key] = "passwords"
-                    elif IPV4_REGEX.match(value):
-                        logger.debug(f"Detected potential IP field: {key} with value: {value}")
-                        self.detectedFields[key] = "ips"
+
+                # Identify potential type
+                detected_type = None
+                if EMAIL_REGEX.match(value):
+                    detected_type = "emails"
+                elif URL_REGEX.match(value):
+                    detected_type = "urls"
+                elif IPV4_REGEX.match(value):
+                    detected_type = "ips"
+                elif any(r.match(value) for r in [SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, BCRYPT_REGEX]):
+                    detected_type = "passwords"
+
+                # If a type was matched, increment and check threshold
+                if detected_type:
+                    counts[key][detected_type] += 1
+                    if counts[key][detected_type] >= 50:
+                        logger.debug(f"Threshold met for {key}: confirmed as {detected_type}")
+                        self.detectedFields[key] = detected_type
 
     def get_itr(self):
         raise NotImplementedError("Subclasses must implement the get_itr method")
@@ -83,7 +95,7 @@ class BaseParser:
                             if mapped_key in parsers.mappings.mappings.priorityMappings:
                                 record_count += 1
                             
-                            values = self.parse_value(mapped_key, key, value, record)
+                            values = self.parse_value(mapped_key, key, value, record) if value is not None else None
 
                             if not values:
                                 continue

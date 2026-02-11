@@ -21,13 +21,13 @@ def extract(record):
                 else:
                     parts = date.split('/')
                 
-                if len(parts[0]) == 4:  # Format: YYYY-MM-DD
+                if len(parts[0]) == 4:
                     year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
-                else:  # Format: MM-DD-YYYY
+                else:
                     month, day, year = int(parts[0]), int(parts[1]), int(parts[2])
                 
-                if year > currentYear or (year == currentYear and month > currentMonth):
-                    continue  # Skip future dates
+                if year > currentYear or (year == currentYear and month > currentMonth) or year < 2000:
+                    continue  # Skip bad dates
 
                 if mostRecentYear is None:
                     mostRecentYear = year

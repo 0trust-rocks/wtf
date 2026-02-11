@@ -2,3 +2,4 @@ postal
 chardet
 orjson
 sqlglot[rs]
+pandas

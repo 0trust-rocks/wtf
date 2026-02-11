@@ -1,14 +1,12 @@
 import csv
 import codecs
 import chardet
-from pathlib import Path
 
 from utils.logs import get_logger
-
-logger = get_logger(__name__)
 from parsers.base_parser import BaseParser
 
-POSSIBLE_DELIMITERS = [",", "\t", " | "]
+logger = get_logger(__name__)
+POSSIBLE_DELIMITERS = [",", "\t", " | ", "|"]
 
 class CSVParser(BaseParser):
     _EXTENSIONS = ['.csv']
@@ -53,19 +51,54 @@ class CSVParser(BaseParser):
         return ('utf-8', False)
     
     def detect_delimiter(self, encoding):
+        possibleDelims = dict.fromkeys(POSSIBLE_DELIMITERS, 0)
+
         with open(self.file_path, 'r', encoding=encoding) as f:
-            lines = f.readlines(100)
+            lines = []
+            for x in range(1000):
+                line = f.readline()
+                if line is None:
+                    break
+                lines.append(line.rstrip())
 
             for line in lines:
-                print(line)
+                for delim in POSSIBLE_DELIMITERS:
+                    if delim in line:
+                        possibleDelims[delim] += 1
+        
+        maxKey = None
+        maxValue = 0
+        for k, v in possibleDelims.items():
+            if v > maxValue and v > 10:
+                maxKey = k
+                maxValue = v
+        
+        return maxKey
+    
+    def get_csv_iter(self, encoding, delimiter: str):
+        clean_delim = delimiter.strip()
+        with open(self.file_path, 'r', encoding=encoding) as f:
+            for line in f:
+                if delimiter in line:
+                    if len(delimiter) > 1:
+                        yield line.replace(delimiter, clean_delim)
+                    else:
+                        yield line
             
 
     def get_itr(self):
         encoding, has_bom = self.detect_encoding_and_bom()
         delimiter = self.detect_delimiter(encoding)
-        logger.debug(f"Detected encoding: {encoding} for file: {self.file_path}")
+        
+        logger.debug("Detected %s CSV with delimiter %s", encoding, delimiter)
+
+        if delimiter is None:
+            logger.error("Unable to detect delimiter for file: %s", self.file_path)
+            exit(-1)
+        
+        cleaned_delimiter = delimiter.strip()
         
         with open(self.file_path, 'r', encoding=encoding) as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(self.get_csv_iter(encoding, delimiter), delimiter=cleaned_delimiter)
             for row in reader:
                 yield row

@@ -4,7 +4,7 @@
     "priority": false
   },
   "firstName": {
-    "values": ["first_name", "first-name", "firstname"],
+    "values": ["first_name", "first-name", "firstname", "first"],
     "priority": true
   },
   "middleName": {
@@ -12,7 +12,7 @@
     "priority": true
   },
   "lastName": {
-    "values": ["last_name", "last-name", "lastname"],
+    "values": ["last_name", "last-name", "lastname", "last"],
     "priority": true
   },
   "gender": {
