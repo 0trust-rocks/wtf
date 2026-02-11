@@ -4,7 +4,7 @@ Inspired by [c137req/ptv](https://github.com/c137req/ptv), this project aims to 
 
 ### Usage
 ```
-wtf.py [-h] [-o OUTPUT] [-p {ndjson,unknown}] [-v] input
+usage: wtf.py [-h] [-o OUTPUT] [-p {ndjson,csv,sql,json,unknown}] [-v] input
 
 WTF Parser
 
@@ -14,8 +14,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Output file path
-  -p {ndjson,unknown}, --parser {ndjson,unknown}
+                        Output path
+  -p {ndjson,csv,sql,json,unknown}, --parser {ndjson,csv,sql,json,unknown}
                         Specify which parser to use
   -v, --verbose         Enable verbose logging
 ```
