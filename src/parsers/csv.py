@@ -28,7 +28,6 @@ class CSVParser(BaseParser):
             if raw_data.startswith(bom):
                 return (encoding, True)
         
-        # Try to detect encoding using chardet
         try:
             with open(self.file_path, 'rb') as f:
                 result = chardet.detect(f.read(1024 * 1024))
@@ -84,7 +83,6 @@ class CSVParser(BaseParser):
                         yield line.replace(delimiter, clean_delim)
                     else:
                         yield line
-            
 
     def get_itr(self):
         encoding, has_bom = self.detect_encoding_and_bom()
@@ -96,7 +94,7 @@ class CSVParser(BaseParser):
             logger.error("Unable to detect delimiter for file: %s", self.file_path)
             exit(-1)
         
-        cleaned_delimiter = delimiter.strip()
+        cleaned_delimiter = delimiter.strip(" ")
         
         with open(self.file_path, 'r', encoding=encoding) as f:
             reader = csv.DictReader(self.get_csv_iter(encoding, delimiter), delimiter=cleaned_delimiter)

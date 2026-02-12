@@ -15,8 +15,12 @@
     "values": ["last_name", "last-name", "lastname", "last"],
     "priority": true
   },
+  "_fullName": {
+    "values": ["full name", "fullname"],
+    "priority": false
+  },
   "gender": {
-    "values": ["gender"],
+    "values": ["gender", "sex"],
     "priority": false
   },
   "ethnicity": {
@@ -24,7 +28,7 @@
     "priority": false
   },
   "dob": {
-    "values": ["date_of_birth", "date-of-birth", "dob", "dateofbirth", "birthdate"],
+    "values": ["date_of_birth", "date-of-birth", "dob", "dateofbirth", "birthdate", "date of birth"],
     "priority": false
   },
   "address": {
@@ -84,7 +88,7 @@
     "priority": true
   },
   "phoneNumbers": {
-    "values": ["phone_number", "phone-number", "phone", "phone_numbers", "phones", "phonenumbers", "phonenumber"],
+    "values": ["phone_number", "phone-number", "phone", "phone_numbers", "phones", "phonenumbers", "phonenumber", "phone number"],
     "priority": true
   },
   "usernames": {
