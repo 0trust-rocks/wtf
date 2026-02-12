@@ -6,10 +6,19 @@ from utils.logs import get_logger
 from parsers.base_parser import BaseParser
 
 logger = get_logger(__name__)
-POSSIBLE_DELIMITERS = [",", "\t", " | ", "|"]
+POSSIBLE_DELIMITERS = [",", "\t", " | ", "|", ":"] # reference: " | " may break - leave for testing, remove comment if tested already
 
+# preferably change to SVParser. not always Comma Separated Values - but doesnt really matter. idc if you dont
 class CSVParser(BaseParser):
-    _EXTENSIONS = ['.csv']
+    _EXTENSIONS = [".csv", ".tsv", ".psv", ".txt"] # csv (comma), tsv (tab), psv (pipe)
+
+    # leaving here for other projects & maybe this one i feel we'll need it idk why
+    """def which_sv(self):
+        # return which sv based on extension
+        # c = comma & colon
+        # t = tab
+        # p = pipe
+        return next((ext for ext in _EXTENSIONS if self.file_path.endswith(ext)), None).replace("sv","").replace(".","")"""
 
     def detect_encoding_and_bom(self):
         with open(self.file_path, 'rb') as f:
@@ -21,7 +30,7 @@ class CSVParser(BaseParser):
             (codecs.BOM_UTF32_LE, 'utf-32'),
             (codecs.BOM_UTF16_BE, 'utf-16'),
             (codecs.BOM_UTF16_LE, 'utf-16'),
-            (codecs.BOM_UTF8, 'utf-8-sig'),
+            (codecs.BOM_UTF8,  'utf-8-sig'),
         ]
         
         for bom, encoding in bom_signatures:

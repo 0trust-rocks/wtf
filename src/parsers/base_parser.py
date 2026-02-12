@@ -93,8 +93,7 @@ class BaseParser:
                             
                             values = self.parse_value(mapped_key, key, value, record) if value is not None else None
 
-                            if not values:
-                                continue
+                            if not values: continue
 
                             for newValue in values:
                                 for k, v in newValue.items():
