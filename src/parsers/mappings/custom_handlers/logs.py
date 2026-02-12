@@ -5,6 +5,9 @@ TODO:
 - integration to wtf.py and load_parsers as this processes filepaths (and will process archive files)
 - add bom_signatures for utf codec differences (will encounter cyrillic alphabet and other alphabets)
 
+- this may need to go in the parent dir i got confused and mad and will
+  work on this later
+
 """
 
 from urllib.parse import urlsplit

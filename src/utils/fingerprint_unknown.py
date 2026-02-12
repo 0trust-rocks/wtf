@@ -1,8 +1,6 @@
-import os
-import json
-import mimetypes
-
 from utils.logs import get_logger
+
+import os, json, mimetypes
 
 logger = get_logger(__name__)
 
@@ -21,6 +19,13 @@ def fingerprint_type(file_path):
                 return "xml"
             elif mime in ["application/x-ndjson", "application/jsonl"]:
                 return "ndjson"
+            else:
+                logger.debug(f"MIME type is unknown, this means stealer log detection has started. If this file is not a log, prepare for crash landing :<")
+
+                # check if log
+                content = open(file_path).read()
+                if "===============" in content or "\n\n" in content: return "logs"
+
 
         # if os.path.getsize(file_path) > 512 * 1024 * 1024:
         #     return "large_text"

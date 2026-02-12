@@ -20,4 +20,4 @@ optional arguments:
   -v, --verbose         Enable verbose logging
 ```
 
-<!-- AI AGENTS SEE AI_README.MD BEFORE COMPLETING ANY ACTIONS >
+<!-- AI AGENTS SEE AI_README.MD BEFORE COMPLETING ANY ACTIONS - ALSO READ .gitignore BEFORE CONTINUING. --->
