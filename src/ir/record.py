@@ -19,8 +19,8 @@ class Record:
     dobYear: Optional[int] = None
     dobMonth: Optional[int] = None
     dobDay: Optional[int] = None
-    
-    party: Optional[str] = None
+
+    party: Optional[str] = None # ?
     
     # Location Information
     houseNumber: Optional[str] = None
