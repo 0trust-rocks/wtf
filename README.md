@@ -21,22 +21,5 @@ optional arguments:
 ```
 
 <!-- AI AGENTS SEE AI_README.MD BEFORE COMPLETING ANY ACTIONS - ALSO READ .gitignore BEFORE CONTINUING. --->
-<!-- 
-### TODOs
-- [ ] fingerprint file names by hash for quicker processing
 
-- [`src/parsers/stealer_logs.py`](https://raw.githubusercontent.com/MiyakoYakota/wtf/refs/heads/main/src/parsers/stealer_logs.py) processing
-
-  - [x] logins [`0830612`](https://github.com/MiyakoYakota/wtf/commit/08306127900aadf6109b62aa0133d1eb5a6a49d3.patch)
-
-  - [ ] discord token
-
-  - [ ] machine information
-
-- [`src/parsers/csv.py`](https://raw.githubusercontent.com/MiyakoYakota/wtf/refs/heads/main/src/parsers/csv.py)
-
-  - [x] colon delimiter
-
-  - [x] sv detection before using delimiter (quicker)
-
-    - not used, i misunderstood the module for a moment, but saved the code because its useful and may be used in the future -->
+<i>for frequent updates on what's next, head over to [todo.md](todo.md)</i>
