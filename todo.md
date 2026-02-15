@@ -1,6 +1,8 @@
 ### TODOs
 - [ ] fingerprint file names by hash for quicker processing - `parsers/stealer_logs.py`
 
+- [ ] ask miyako what `party: Optional[str] = None` is (????)
+
 - `parsers/stealer_logs.py`
 
   - [ ] update to use ir.Record() for yielding returns

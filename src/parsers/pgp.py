@@ -38,9 +38,9 @@ class PGPParser(BaseParser):
                 ir.add_or_set_value("notes", f"Fingerprint: {key.fingerprint}")
                 ir.add_or_set_value("notes", f"Key Algorithm: {key.pubkey_algorithm.name}")
                 if key.created:
-                    ir.recencyYear = key.created.year
+                    ir.recencyYear =  key.created.year
                     ir.recencyMonth = key.created.month
-                    ir.recencyDay = key.created.day
+                    ir.recencyDay =   key.created.day
 
                 # key.userids returns a list of "PGPUID" objects which resolve to str
                 for uid in key.userids: self._parse_user_id(str(uid), ir)
@@ -58,8 +58,8 @@ class PGPParser(BaseParser):
             return
 
         raw_name = match.group(1)
-        comment = match.group(3)
-        email = match.group(5)
+        comment =  match.group(3)
+        email =    match.group(5)
 
         if email:   record.add_or_set_value("emails", email)
         if comment: record.add_or_set_value("notes", f"ID Comment: {comment}")
