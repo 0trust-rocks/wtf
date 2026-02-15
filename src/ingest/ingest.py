@@ -1,5 +1,6 @@
 from src.utils.logs import logging
-import os
+from concurrent.futures import ThreadPoolExecutor
+import os, boto3
 
 data_path = os.path.join(os.path.dirname(__file__), 'data')
 files_list = (entry.path for entry in os.scandir(data_path) if entry.is_file() and entry.name.endswith('.jsonl'))
@@ -26,7 +27,7 @@ TCP connections can "throttle" or stall due to congestion. if one connection slo
 """
 
 def _upload_part(upload_id, part_number, chunk_data):
-    response = data_store.upload_part(Bucket=BUCKET, Key=KEY, PartNumber=part_number,UploadId=upload_id, Body=chunk_data) # boto.client
+    response = data_store.upload_part(Bucket=BUCKET, Key=KEY, PartNumber=part_number,UploadId=upload_id, Body=chunk_data) # boto.client (boto3 import)
     return {'PartNumber': part_number, 'ETag': response['ETag']}
 
 def _parallel_data_store_upload():
