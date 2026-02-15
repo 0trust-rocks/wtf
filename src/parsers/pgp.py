@@ -1,11 +1,12 @@
+import re
+import logging
+import pgpy
 from datetime import datetime
-from parsers.base_parser import BaseParser
 
 from ir.record import Record
 from utils.logs import get_logger
-from utils.regex import PGPPGP_UID_REGEX # can get more than just email, name, groups with keys but get this working first
-
-import re, logging, pgpy
+from utils.regex import PGP_UID_REGEX
+from parsers.base_parser import BaseParser
 
 logger = get_logger(__name__)
 
@@ -13,8 +14,9 @@ class PGPParser(BaseParser):
     _EXTENSIONS = ['.asc', '.pub', '.pgp', '.gpg', '.key']
 
     def get_itr(self):
-        # iterates through a file containing PGP Public Key Blocks
-
+        """
+        extracts primary identity, subkeys, signatures, and cryptographic metadata
+        """
         logger.info(f"Starting PGP conversion for {self.file_path}")
 
         try:
@@ -29,21 +31,44 @@ class PGPParser(BaseParser):
             logger.warning(f"No key blocks found in {self.file_path}")
             return
 
-        # parse individually to handle the binary packet structure
         for block in key_blocks:
             try:
+                # pgpy handles the binary packet unpacking from the ASCII armor
                 key, _ = pgpy.PGPKey.from_blob(block)
                 ir = Record()
-                ir.add_or_set_value("source", "PGP Public Key")
+                ir.add_or_set_value("source", self.file_path[:20]) # truncate to 20char just incase we somehow try to ingest a filename with like 400 chars and it just freaks out or smth
                 ir.add_or_set_value("notes", f"Fingerprint: {key.fingerprint}")
+                ir.add_or_set_value("notes", f"Key ID: {key.magicid}")
                 ir.add_or_set_value("notes", f"Key Algorithm: {key.pubkey_algorithm.name}")
+                ir.add_or_set_value("notes", f"Key Size: {key.key_size} bits")
+                
+                # creation/revokation
                 if key.created:
-                    ir.recencyYear =  key.created.year
+                    ir.recencyYear = key.created.year
                     ir.recencyMonth = key.created.month
-                    ir.recencyDay =   key.created.day
+                    ir.recencyDay = key.created.day
+                    ir.add_or_set_value("notes", f"Created At: {key.created.isoformat()}")
+                if key.expires:    ir.add_or_set_value("notes", f"Expires At: {key.expires.isoformat()}")
+                if key.is_revoked: ir.add_or_set_value("notes", "Status: REVOKED")
 
                 # key.userids returns a list of "PGPUID" objects which resolve to str
-                for uid in key.userids: self._parse_user_id(str(uid), ir)
+                for uid in key.userids: 
+                    self._parse_user_id(str(uid), ir)
+
+                # subkeys
+                for subkey_id in key.subkeys:
+                    sk = key.subkeys[subkey_id]
+                    sk_meta = f"Subkey [{sk.magicid}] {sk.pubkey_algorithm.name} ({sk.key_size} bits)"
+                    ir.add_or_set_value("notes", sk_meta)
+                    if sk.created:
+                        ir.add_or_set_value("notes", f"Subkey {sk.magicid} Created: {sk.created.isoformat()}")
+
+                # sigs/trust metadata
+                # rxtract Key IDs of people who have signed this key
+                unique_signers = {sig.keyid for sig in key.signatures if sig.keyid}
+                if unique_signers:
+                    ir.add_or_set_value("notes", f"Certified by KeyIDs: {', '.join(unique_signers)}")
+
                 yield ir.to_dict()
 
             except Exception as e:
@@ -53,7 +78,6 @@ class PGPParser(BaseParser):
     def _parse_user_id(self, uid_string, record: Record):
         match = self.PGP_UID_REGEX.match(uid_string)
         if not match:
-            # fallback: just treat the whole thing as a note or name if regex fails
             record.add_or_set_value("notes", f"Raw UID: {uid_string}")
             return
 
@@ -66,27 +90,21 @@ class PGPParser(BaseParser):
 
         if raw_name:
             raw_name = raw_name.strip()
-            if raw_name:
+            if not raw_name: return
+            # if we domt have a name yet, populate the primary fields
+            if not record.firstName:
                 parts = raw_name.split()
                 if len(parts) == 1:
-                    if not record.firstName: # only set if not already set by a primary UID
-                        record.firstName = parts[0]
-                    else:
-                        record.add_or_set_value("usernames", parts[0]) # secondary names as aliases (pgp allows multiple names, emails, etc)
-                
+                    record.firstName = parts[0]
                 elif len(parts) == 2:
-                    # first Last
-                    if not record.firstName:
-                        record.firstName = parts[0]
-                        record.lastName = parts[1]
-                    else:
-                        record.add_or_set_value("notes", f"Alias: {raw_name}")
-
+                    record.firstName = parts[0]
+                    record.lastName = parts[1]
                 elif len(parts) > 2:
-                    # first middle last
-                    if not record.firstName:
-                        record.firstName = parts[0]
-                        record.lastName = parts[-1]
-                        record.middleName = " ".join(parts[1:-1])
-                    else:
-                        record.add_or_set_value("notes", f"Alias: {raw_name}") # remember this is raw, i know "alias" will catch your eyes and wonder why i didnt put under "username" like the last/like i should've
+                    record.firstName = parts[0]
+                    record.lastName = parts[-1]
+                    record.middleName = " ".join(parts[1:-1])
+            else:
+                # if primary name is set, treat additional uids as aliases/usernames
+                record.add_or_set_value("usernames", raw_name)
+                # record.add_or_set_value("notes", f"Raw PGP Name Unknown: {raw_name}")
+                # change if u want ^

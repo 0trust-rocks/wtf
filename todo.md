@@ -13,12 +13,6 @@
 
   - [ ] machine information
 
-- `parsers/pgp.py`
-  - [x] `get_itr`
-  - [x] follow `ir/record.py` fields
-  - [ ] add more data to be pulled
-    - [ ] time of creation
-
 ### done
 
 - `parsers/csv.py`
@@ -28,3 +22,17 @@
   - [x] sv detection before using delimiter (quicker)
 
     - not used, i misunderstood the module for a moment, but saved the code because its useful and may be used in the future
+
+- `parsers/pgp.py`
+
+  - [x] `get_itr`
+
+  - [x] follow `ir/record.py` fields
+  
+  - [x] add more data to be pulled
+  
+    - [x] time of creation
+  
+    - [x] subkeys
+  
+    - [x] signers
