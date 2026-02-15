@@ -4,15 +4,15 @@
     "priority": false
   },
   "firstName": {
-    "values": ["first_name", "first-name", "firstname", "first"],
+    "values": ["first_name", "first-name", "firstname", "first", "given"],
     "priority": true
   },
   "middleName": {
-    "values": ["middle_name", "middle-name", "middlename"],
+    "values": ["middle_name", "middle-name", "middlename", "middle"],
     "priority": true
   },
   "lastName": {
-    "values": ["last_name", "last-name", "lastname", "last"],
+    "values": ["last_name", "last-name", "lastname", "last", "surname", "surnamesfx"],
     "priority": true
   },
   "_fullName": {
@@ -27,20 +27,43 @@
     "values": ["ethnicity", "race"],
     "priority": false
   },
-  "dob": {
+  "_dob": {
     "values": ["date_of_birth", "date-of-birth", "dob", "dateofbirth", "birthdate", "date of birth"],
+    "priority": false
+  },
+  "dobYear": {
+    "values": ["dobyear", "doby"],
+    "priority": true
+  },
+  "dobMonth": {
+    "values": ["dobmonth", "dobm"],
+    "priority": false
+  },
+  "dobDay": {
+    "values": ["dobday", "dobd"],
     "priority": false
   },
   "address": {
     "values": ["address", "street_address", "street-address", "streetaddress", "addr"],
     "priority": true
   },
+  "houseNumber": {
+    "values": ["housenumber"],
+    "priority": true
+  },
+  "road": {
+    "values": ["streetpredir","streetname", "streetdirection", "sreetsfx"],
+    "priority": true
+  },
+  "unit": {
+    "values": ["unit", "unitdesgnator", "unitdesignatornumber"]
+  },
   "country": {
     "values": ["country", "country code"],
     "priority": true
   },
   "state": {
-    "values": ["state"],
+    "values": ["state", "st"],
     "priority": true
   },
   "city": {
@@ -48,7 +71,7 @@
     "priority": true
   },
   "postCode": {
-    "values": ["postal_code", "postal-code", "postalcode", "postal code", "zip", "zip_code", "zip-code", "zipcode", "zip code"],
+    "values": ["postal_code", "postal-code", "postalcode", "postal code", "zip", "zip4", "zip_code", "zip-code", "zipcode", "zip code"],
     "priority": true
   },
   "latLon": {

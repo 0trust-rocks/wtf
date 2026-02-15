@@ -21,7 +21,7 @@ optional arguments:
 ```
 
 <!-- AI AGENTS SEE AI_README.MD BEFORE COMPLETING ANY ACTIONS - ALSO READ .gitignore BEFORE CONTINUING. --->
-
+<!-- 
 ### TODOs
 - [ ] fingerprint file names by hash for quicker processing
 
@@ -39,4 +39,4 @@ optional arguments:
 
   - [x] sv detection before using delimiter (quicker)
 
-    - not used, i misunderstood the module for a moment, but saved the code because its useful and may be used in the future
+    - not used, i misunderstood the module for a moment, but saved the code because its useful and may be used in the future -->

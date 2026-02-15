@@ -16,7 +16,10 @@ class Record:
     # Demographics
     gender: Optional[str] = None
     ethnicity: Optional[str] = None
-    dob: Optional[str] = None
+    dobYear: Optional[int] = None
+    dobMonth: Optional[int] = None
+    dobDay: Optional[int] = None
+    
     party: Optional[str] = None
     
     # Location Information
@@ -124,7 +127,11 @@ class Record:
         self.photos = []
 
     def to_dict(self):
-        record = {k: v for k, v in self.__dict__.items() if v is not None and v != []}
+        record = {
+            k: (v.strip() if isinstance(v, str) else v) 
+            for k, v in self.__dict__.items() 
+            if v is not None and v != []
+        }
         # Add ID if not already present
         if "id" not in record or record["id"] == "":
             record["id"] = str(uuid4())
@@ -133,16 +140,19 @@ class Record:
     def add_or_set_value(self, key: str, value):
         if hasattr(self, key):
             current_value = getattr(self, key)
+            
+            # Handle List fields (append/extend)
             if isinstance(current_value, list):
                 if isinstance(value, list):
                     current_value.extend(value)
                 else:
                     current_value.append(value)
+            
+            # Handle String fields (concatenate with space if existing)
+            elif isinstance(current_value, str) and current_value.strip():
+                updated_str = f"{current_value} {value}"
+                setattr(self, key, updated_str)
+            
+            # Handle None or empty values (overwrite)
             else:
-                if isinstance(current_value, list):
-                    if current_value is None:
-                        setattr(self, key, [value])
-                    else:
-                        current_value.append(value)
-                else:
-                    setattr(self, key, value)
+                setattr(self, key, value)

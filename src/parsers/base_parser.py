@@ -15,8 +15,10 @@ class BaseParser:
 
     detectedFields = {}
 
-    def __init__(self, file_path, output_path=None, source=None):
+    def __init__(self, file_path, output_path=None, source=None, threads=4, dry_run=False):
         self.file_path = file_path
+        self.num_threads = threads
+        self.dry_run = dry_run
         # If output path is a folder
         if output_path and os.path.isdir(output_path):
             self.output_path = os.path.join(output_path, os.path.basename(file_path) + ".jsonl")
@@ -40,7 +42,6 @@ class BaseParser:
         counts = defaultdict(lambda: defaultdict(int))
 
         for i, record in enumerate(self.get_itr()):
-            # Increased limit slightly to ensure we can hit 20 matches
             if i >= 500: 
                 break
 
@@ -67,9 +68,13 @@ class BaseParser:
                         logger.debug(f"Threshold met for {key}: confirmed as {detected_type}")
                         self.detectedFields[key] = detected_type
 
+    def stop_parse(self):
+        # Multi-threaded parsers may implement this to be signaled to quit
+        pass
+
     def get_itr(self):
         raise NotImplementedError("Subclasses must implement the get_itr method")
-
+    
     def parse(self):
         record_count = 0
         self.detect_fields()
@@ -79,44 +84,68 @@ class BaseParser:
         with open(self.output_path, 'wb') as output_file:
             for record in self.get_itr():
                 try:
+                    # Limit ourselves to 10 records
+                    if self.dry_run:
+                        if record_count >= 1000:
+                            self.stop_parse()
+                            logger.info(f"Dry run limit reached. Stopping...")
+                            break
+                            
+
                     std_record = Record()
                     priority_fields_count = 0
+                    
+                    # Track which keys to remove from the "line" field
+                    keys_to_remove = []
+
                     for key, value in record.items():
-                        # Use cached mapping or compute it once
                         if key not in key_mapping_cache:
                             key_mapping_cache[key] = self.associate_key(key)
                         
                         mapped_key = key_mapping_cache[key]
                         if mapped_key is not None:
-                            if mapped_key in parsers.mappings.mappings.priorityMappings:
-                                record_count += 1
-                            
-                            values = self.parse_value(mapped_key, key, value, record) if value is not None else None
+                            values = self.parse_value(mapped_key, key, value, record) if (value is not None and value != "" and value != "-") else None
 
-                            if not values: continue
+                            # If we have valid values, this key was successfully mapped
+                            keys_to_remove.append(key)
+
+                            if not values:
+                                continue
+                            
+                            if mapped_key in parsers.mappings.mappings.priorityMappings:
+                                priority_fields_count += 1
 
                             for newValue in values:
                                 for k, v in newValue.items():
                                     if v is not None and v != "":
                                         std_record.add_or_set_value(k, v)
 
-                    record_dict = std_record.to_dict()
+                    if priority_fields_count >= 2:
+                        record_dict = std_record.to_dict()
 
-                    if len(record_dict) > 2:
-                        if "line" not in record_dict:
-                            # Remove empty values from the original record to reduce size
-                            for k in list(record.keys()):
-                                if record[k] is None or record[k] == "":
-                                    del record[k]
-                            record_dict["line"] = orjson.dumps(record).decode('utf-8')
+                        if len(record_dict) > 2:
+                            if "line" not in record_dict:
+                                line_data = record.copy()
+                                for k in keys_to_remove:
+                                    if k in line_data:
+                                        del line_data[k]
 
-                        # Apply postprocessors if any exist
-                        for name, postprocessor in postprocessors.items():
-                            if postprocessor: record_dict = postprocessor(record_dict)
-                            logger.error(f"{postprocessor} missing extract() or module is broken or file is corrupted")
+                                for k in list(line_data.keys()):
+                                    if line_data[k] is None or line_data[k] == "":
+                                        del line_data[k]
+                                
+                                if line_data:
+                                    record_dict["line"] = ", ".join(f"{k}: {v}" for k, v in line_data.items())
 
-                        output_file.write(orjson.dumps(record_dict) + b"\n")
-                        record_count += 1
+                            for name, postprocessor in postprocessors.items():
+                                if postprocessor:
+                                    try:
+                                        record_dict = postprocessor(record_dict)
+                                    except Exception as e:
+                                        logger.error(f"Postprocessor '{name}' failed: {e}")
+
+                            output_file.write(orjson.dumps(record_dict) + b"\n")
+                            record_count += 1
 
                 except Exception as e:
                     logger.error(f"Error parsing record: {record}.\nError: {e}")
@@ -125,6 +154,7 @@ class BaseParser:
         if record_count == 0:
             logger.info(f"No records found in file: {self.file_path}")
             # Delete the empty output file
-            os.remove(self.output_path)
+            if os.path.exists(self.output_path):
+                os.remove(self.output_path)
         else:
             logger.info(f"Finished parsing file: {self.file_path}. Total records: {record_count}. Output written to: {self.output_path}")
