@@ -1,50 +1,47 @@
-from utils.logs import get_logger
+import mimetypes
+import magic
 
-import os, json, mimetypes
+from utils.logs import get_logger
 
 logger = get_logger(__name__)
 
 def fingerprint_type(file_path):
+    try:
+        blob = open(file_path, 'rb').read(2048)
+        mime = magic.from_buffer(blob, mime=True)
+        logger.debug(f"Magic detected MIME type: {mime} for file: {file_path}")
+    except Exception as e:
+        logger.warning(f"Magic failed, falling back to mimetypes: {e}")
         mime = mimetypes.guess_type(file_path)[0]
 
-        if mime:
-            logger.debug(f"Guessed MIME type: {mime} for file: {file_path}")
-            if mime.startswith("text/csv") or mime.startswith("text/tab-separated-values"):
-                return "csv"
-            if mime.startswith("text/"):
-                return "text"
-            elif mime == "application/json":
-                return "json"
-            elif mime in ["application/xml", "text/xml"]:
-                return "xml"
-            elif mime in ["application/x-ndjson", "application/jsonl"]:
-                return "ndjson"
-            else:
-                logger.debug(f"MIME type is unknown, this means stealer log detection has started. If this file is not a log, prepare for crash landing :<")
+    if not mime:
+        return "unknown"
 
-                # check if log
-                content = open(file_path).read()
-                if "===============" in content or "\n\n" in content: return "logs"
+    # 2. Map the MIME types to your internal labels
+    # Magic correctly identifies CSVs even if they are named .txt
+    if mime == "text/csv" or mime == "text/tab-separated-values":
+        return "csv"
+    
+    if mime == "application/json":
+        return "json"
+    
+    if mime in ["application/xml", "text/xml"]:
+        return "xml"
+    
+    if mime in ["application/x-ndjson", "application/jsonl"]:
+        return "ndjson"
 
+    if mime.startswith("text/"):
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                snippet = f.read(1024).lstrip()
+                if snippet.startswith(('{', '[')):
+                    return "json"
+                if snippet.startswith('<'):
+                    return "xml"
+        except Exception:
+            pass
+            
+        return "text"
 
-        # if os.path.getsize(file_path) > 512 * 1024 * 1024:
-        #     return "large_text"
-        
-
-
-        # # Load to memory
-        # with open(file_path, 'r') as f:
-        #     content = f.read()
-
-        # # Check for common structured formats
-        # if content.lstrip().startswith('{') or content.lstrip().startswith('['):
-        #     # Attempt to parse as JSON
-        #     try:
-        #         json.loads(content)
-        #         return "json"
-        #     except:
-        #         pass
-        # # Check for XML
-        # if content.lstrip().startswith('<'):
-        #     logger.debug("File starts with <, likely XML")
-        #     return "xml"
+    return "unknown"

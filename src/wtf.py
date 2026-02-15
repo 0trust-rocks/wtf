@@ -20,6 +20,7 @@ def main():
     argparser.add_argument('-o', '--output', help='Output path', required=False)
     argparser.add_argument('-p', '--parser', help='Specify which parser to use', choices=parsers.keys(), required=False)
     argparser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose logging')
+    argparser.add_argument('-s', '--source', help='Name of the data source (stored as "source" field)', required=False)
 
     args = argparser.parse_args()
 
@@ -67,6 +68,10 @@ def main():
                         parser_class = parsers[fingerprint]
                         logger.info(f"Found parser {parser_class.__name__} for fingerprint: {fingerprint}")
                     elif parsers.get("unknown"):
+                        if (file_extension == '.7z'):
+                            logger.warning("Skipping archive %s", file)
+                            continue
+
                         logger.info("Falling back to UnknownParser")
                         parser_class = parsers["unknown"]
                     else:
@@ -79,7 +84,7 @@ def main():
                     logger.warning(f"Invalid parser choice: {args.parser} not in {parsers}")
                     exit(-1)
 
-            parser = parser_class(file, output_path=args.output)
+            parser = parser_class(file, output_path=args.output, source=args.source)
             parser.parse()
         except Exception as e:
             logger.error(f"Error processing file: {file}\nError: {e}")

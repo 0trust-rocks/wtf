@@ -15,7 +15,7 @@ class BaseParser:
 
     detectedFields = {}
 
-    def __init__(self, file_path, output_path=None):
+    def __init__(self, file_path, output_path=None, source=None):
         self.file_path = file_path
         # If output path is a folder
         if output_path and os.path.isdir(output_path):

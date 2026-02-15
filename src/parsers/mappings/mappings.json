@@ -92,7 +92,7 @@
     "priority": true
   },
   "usernames": {
-    "values": ["username", "user_name", "user-name", "usernames"],
+    "values": ["username", "user_name", "user-name", "usernames", "name"],
     "priority": true
   },
   "ips": {
