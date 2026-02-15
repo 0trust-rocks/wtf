@@ -14,6 +14,8 @@
 - `parsers/pgp.py`
   - [x] `get_itr`
   - [x] follow `ir/record.py` fields
+  - [ ] add more data to be pulled
+    - [ ] time of creation
 
 ### done
 
