@@ -6,6 +6,7 @@ URL_ENCODED_EMAIL_REGEX = re.compile(r'[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+%2E[a-z
 DATE_PATTERN_REGEX = re.compile(r'(\b\d{4}[-/]\d{2}[-/]\d{2}\b|\b\d{2}[-/]\d{2}[-/]\d{4}\b)')
 DOMAIN_REGEX = re.compile(r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?::\d{1,5})?', re.IGNORECASE)
 
+PGP_UID_REGEX = re.compile(r"^([^<(]+)?(\s*\(([^)]+)\))?\s*(<([^>]+)>)?")
 URL_REGEX = re.compile(r'https?://[^\s]+')
 SHA1_REGEX = re.compile(r'\b[a-fA-F0-9]{40}\b')
 SHA256_REGEX = re.compile(r'\b[a-fA-F0-9]{64}\b')

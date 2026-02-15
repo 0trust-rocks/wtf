@@ -5,3 +5,4 @@ sqlglot[rs]
 pandas
 python-magic
 charset_normalizer
+pgpy

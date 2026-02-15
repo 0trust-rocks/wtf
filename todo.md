@@ -3,6 +3,8 @@
 
 - `parsers/stealer_logs.py`
 
+  - [ ] update to use ir.Record() for yielding returns
+
   - [x] logins [`0830612`](https://github.com/MiyakoYakota/wtf/commit/08306127900aadf6109b62aa0133d1eb5a6a49d3)
 
   - [ ] discord token
@@ -10,7 +12,8 @@
   - [ ] machine information
 
 - `parsers/pgp.py`
-  - [ ] pgp -> jsonl
+  - [x] `get_itr`
+  - [x] follow `ir/record.py` fields
 
 ### done
 
