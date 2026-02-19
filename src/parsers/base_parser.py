@@ -197,7 +197,7 @@ class BaseParser:
                                 del line_data[k]
                         
                         if line_data:
-                            record_dict["line"] = ", ".join(f"{k}: {v}" for k, v in line_data.items())
+                            record_dict["line"] = ", ".join(f"{k.strip('"')}: {v}" for k, v in line_data.items())
                         
                         if args.source:
                             record_dict["source"] = args.source
