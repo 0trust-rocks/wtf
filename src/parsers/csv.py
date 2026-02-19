@@ -107,49 +107,39 @@ class CSVParser(BaseParser):
 
     @staticmethod
     def _line_parser_worker(input_q: multiprocessing.Queue, output_q: multiprocessing.Queue, fieldnames: List[str], delimiter: str):
-        while True:
-            line = input_q.get()
+        logger.info("Starting line parser worker")
+        lastLine = ""
+        def _queue_generator():
+            nonlocal lastLine
+            while True:
+                line = input_q.get()
+                
+                if line == utils.multithreading.LINE_PARSER_SENTINEL:
+                    logger.info("Got sentinel, ending parser thread")
+                    break
+                
+                if line and line.strip():
+                    lastLine = line
+                    yield line
 
-            # Shutdown signal
-            if line == utils.multithreading.LINE_PARSER_SENTINEL:
-                output_q.put(utils.multithreading.FILE_READER_SENTINEL)
-                break
+        cleaned_delimiter = delimiter.strip(" ")
 
-            if not line or not line.strip():
-                continue
+        reader = csv.DictReader(_queue_generator(), delimiter=cleaned_delimiter, fieldnames=fieldnames)
 
+        for row in reader:
             try:
-                # We use split(delimiter) here for speed. 
-                # Note: If your CSV uses quotes to wrap delimiters (e.g. "City, State"), 
-                # you should use next(csv.reader([line], delimiter=delimiter)) instead.
-                parts = line.split(delimiter)
-
-                if fieldnames and len(parts) == len(fieldnames):
-                    # Standard Success Path: Create the dict and strip whitespace from values
-                    row = {
-                        fieldnames[i]: parts[i].strip() 
-                        for i in range(len(fieldnames))
-                    }
-                    output_q.put(row)
+                if row and all(k is not None for k in row):
+                    output_q.put({k: v.strip() for k, v in row.items() if k is not None and v is not None})
+                    logger.info({k: v.strip() for k, v in row.items() if k is not None and v is not None})
                 else:
-                    # Fallback Path: Line is malformed or column count is off
-                    logger.warning("Malformed row or column mismatch. Using UnknownParser: %s", line[:100].strip())
-                    
-                    # Use the logic from your parsers.unknown module
-                    fallback_data = extract_with_unknown_parser(line)
-                    
-                    if fallback_data:
-                        output_q.put(fallback_data)
+                    logger.warning("Malformed CSV row, using UnknownParser fallback: %s", lastLine.strip())
+                    output_q.put(extract_with_unknown_parser(lastLine))
+            except Exception:
+                logger.warning("CSV parsing error, using UnknownParser fallback: %s %s", lastLine.strip(), traceback.format_exc())
+                output_q.put(extract_with_unknown_parser(lastLine))
 
-            except Exception as e:
-                logger.error(f"Worker Exception on line '{line[:50]}...': {e}")
-                # Final attempt to save the data via unknown parser
-                try:
-                    fallback_data = extract_with_unknown_parser(line)
-                    if fallback_data:
-                        output_q.put(fallback_data)
-                except:
-                    pass
+        logger.info("Processor thread complete")
+        output_q.put(utils.multithreading.FILE_READER_SENTINEL)
 
     @staticmethod
     def _file_reader_worker(file_path: str, encoding: str, delimiter: str, 
@@ -205,7 +195,7 @@ class CSVParser(BaseParser):
         self.worker_ps = []
         for _ in range(self.num_threads):
             p = multiprocessing.Process(
-                target=self._line_parser_worker, 
+                target=self._line_parser_worker,
                 args=(self.input_q, self.output_q, fieldnames, delimiter)
             )
             p.daemon = True
