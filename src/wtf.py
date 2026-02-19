@@ -3,6 +3,7 @@ import os
 import logging
 import argparse
 import glob
+import traceback
 
 from utils.fingerprint_unknown import fingerprint_type
 from utils.load_parsers import load_parsers
@@ -21,8 +22,14 @@ def main():
     argparser.add_argument('-p', '--parser', help='Specify which parser to use', choices=parsers.keys(), required=False)
     argparser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose logging')
     argparser.add_argument('-s', '--source', help='Name of the data source (stored as "source" field)', required=False)
+    argparser.add_argument('-t', '--threads', type=int, default=1, help='Number of threads for parallel parsing')
+    argparser.add_argument('--headers', default="", type=str, required=False)
+    argparser.add_argument('--dry-run', action='store_true', help='Only parse 1000 lines from input files. This is useful for testing your parser on a large dataset before converting.')
+    argparser.add_argument('--recency-year', default=None, type=int, required=False)
 
     args = argparser.parse_args()
+
+    print(args)
 
     if args.verbose:
         logger.setLevel(logging.DEBUG)
@@ -84,10 +91,10 @@ def main():
                     logger.warning(f"Invalid parser choice: {args.parser} not in {parsers}")
                     exit(-1)
 
-            parser = parser_class(file, output_path=args.output, source=args.source)
+            parser = parser_class(file, output_path=args.output, source=args.source, threads=args.threads, dry_run=args.dry_run, headers=args.headers, recency_year=args.recency_year)
             parser.parse()
         except Exception as e:
-            logger.error(f"Error processing file: {file}\nError: {e}")
+            logger.error(f"Error processing file: %s\nError: %s", file, traceback.format_exc())
 
 if __name__ == "__main__":
     main()

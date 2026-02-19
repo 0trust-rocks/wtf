@@ -4,20 +4,20 @@
     "priority": false
   },
   "firstName": {
-    "values": ["first_name", "first-name", "firstname", "first"],
+    "values": ["first_name", "first-name", "firstname", "first", "person_first_name_unanalyzed", "person_last_name_unanalyzed", "given"],
     "priority": true
   },
   "middleName": {
-    "values": ["middle_name", "middle-name", "middlename"],
+    "values": ["middle_name", "middle-name", "middlename", "middle"],
     "priority": true
   },
   "lastName": {
-    "values": ["last_name", "last-name", "lastname", "last"],
+    "values": ["last_name", "last-name", "lastname", "last", "surname"],
     "priority": true
   },
   "_fullName": {
-    "values": ["full name", "fullname"],
-    "priority": false
+    "values": ["full name", "fullname", "name", "person_name"],
+    "priority": true
   },
   "gender": {
     "values": ["gender", "sex"],
@@ -28,19 +28,19 @@
     "priority": false
   },
   "dob": {
-    "values": ["date_of_birth", "date-of-birth", "dob", "dateofbirth", "birthdate", "date of birth"],
+    "values": ["date_of_birth", "date-of-birth", "dob", "dateofbirth", "birthdate", "date of birth", "birthday"],
     "priority": false
   },
   "address": {
-    "values": ["address", "street_address", "street-address", "streetaddress", "addr"],
+    "values": ["address", "street_address", "street-address", "streetaddress", "addr", "street1", "street2"],
     "priority": true
   },
   "country": {
-    "values": ["country", "country code"],
+    "values": ["country", "country code", "countrycode"],
     "priority": true
   },
   "state": {
-    "values": ["state"],
+    "values": ["state", "region"],
     "priority": true
   },
   "city": {
@@ -48,7 +48,7 @@
     "priority": true
   },
   "postCode": {
-    "values": ["postal_code", "postal-code", "postalcode", "postal code", "zip", "zip_code", "zip-code", "zipcode", "zip code"],
+    "values": ["postal_code", "postal-code", "postalcode", "postal code", "zip", "zip_code", "zip-code", "zipcode", "zip code", "postcode"],
     "priority": true
   },
   "latLon": {
@@ -84,7 +84,7 @@
     "priority": true
   },
   "emails": {
-    "values": ["email", "email_address", "email-address", "emails"],
+    "values": ["email", "email_address", "email-address", "emails", "paypal_email", "person_email"],
     "priority": true
   },
   "phoneNumbers": {
@@ -92,11 +92,11 @@
     "priority": true
   },
   "usernames": {
-    "values": ["username", "user_name", "user-name", "usernames", "name"],
+    "values": ["username", "user_name", "user-name", "usernames", "name", "openid", "skype"],
     "priority": true
   },
   "ips": {
-    "values": ["ip", "ip_address", "ip-address", "ipaddress", "ips", "ip_addresses", "ip-addresses"],
+    "values": ["ip", "ip_address", "ip-address", "ipaddress", "ips", "ip_addresses", "ip-addresses", "ipaddress", "userip", "last_ip"],
     "priority": true
   },
   "domains": {
@@ -104,11 +104,11 @@
     "priority": true
   },
   "urls": {
-    "values": ["url", "urls", "website", "websites", "link", "links"],
+    "values": ["url", "urls", "website", "websites", "link", "links", "website", "person_linkedin_url"],
     "priority": false
   },
   "passwords": {
-    "values": ["password", "passwords"],
+    "values": ["password", "passwords", "md5password"],
     "priority": true
   },
   "source": {
@@ -124,7 +124,7 @@
     "priority": true
   },
   "userAgent": {
-    "values": ["useragent", "user-agent", "agent"],
+    "values": ["useragent", "user-agent", "agent", "devicetype", "devicemodel"],
     "priority": true
   },
   "text": {
