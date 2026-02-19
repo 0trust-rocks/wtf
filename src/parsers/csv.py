@@ -130,7 +130,6 @@ class CSVParser(BaseParser):
             try:
                 if row and all(k is not None for k in row):
                     output_q.put({k: v.strip() for k, v in row.items() if k is not None and v is not None})
-                    logger.info({k: v.strip() for k, v in row.items() if k is not None and v is not None})
                 else:
                     logger.warning("Malformed CSV row, using UnknownParser fallback: %s", lastLine.strip())
                     output_q.put(extract_with_unknown_parser(lastLine))

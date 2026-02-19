@@ -1,6 +1,6 @@
 from uuid import uuid4
 from collections import defaultdict
-from postprocess import postprocessors # __init__.py change
+from postprocess import postprocessors
 from ir.record import Record
 from utils.logs import get_logger
 from utils.regex import UUID4_REGEX, EMAIL_REGEX, URL_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, BCRYPT_REGEX, IPV4_REGEX
@@ -106,7 +106,7 @@ class BaseParser:
 
                     for key, value in record.items():
                         if key not in key_mapping_cache:
-                            key_mapping_cache[key] = self.associate_key(key)
+                            key_mapping_cache[key] = self.associate_key(key.strip('"'))
                         
                         mapped_key = key_mapping_cache[key]
                         if mapped_key is not None:

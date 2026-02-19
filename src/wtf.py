@@ -30,8 +30,6 @@ def main():
 
     args = argparser.parse_args()
 
-    print(args)
-
     if args.verbose:
         logger.setLevel(logging.DEBUG)
         logger.debug("Verbose logging enabled")
