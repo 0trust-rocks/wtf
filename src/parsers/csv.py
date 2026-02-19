@@ -1,13 +1,14 @@
 import csv
 import codecs
+from typing import List
 import chardet
-import urllib.parse
 import traceback
+import multiprocessing
+import utils.multithreading
 
 from utils.logs import get_logger
 from parsers.base_parser import BaseParser
-from ir.record import Record
-from utils.regex import EMAIL_REGEX, URL_ENCODED_EMAIL_REGEX, URL_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, BCRYPT_REGEX, IPV4_REGEX
+from parsers.unknown import extract_with_unknown_parser
 
 logger = get_logger(__name__)
 POSSIBLE_DELIMITERS = [",", "\t", " | ", "|", ":", " "]
@@ -17,6 +18,10 @@ csv.field_size_limit(10 * 1024 * 1024)
 class CSVParser(BaseParser):
     _EXTENSIONS = [".csv", ".tsv", ".psv", ".txt"]
     lastLine = ""
+    input_q = None
+    output_q = None
+    reader_p = None
+    worker_ps = []
 
     def detect_encoding_and_bom(self):
         with open(self.file_path, 'rb') as f:
@@ -86,70 +91,137 @@ class CSVParser(BaseParser):
         maxKey = None
         maxValue = 0
         for k, v in possibleDelims.items():
-            if v > maxValue and v > 10:
+            if v > maxValue:
                 maxKey = k
                 maxValue = v
         return maxKey
+    
+    def detect_fieldnames(self, encoding, delimiter):
+        with open(self.file_path, 'r', encoding=encoding) as f:
+            first_line = f.readline().strip()
+            fieldnames = first_line.split(delimiter)
+            fieldnames = [field.strip() for field in fieldnames]
 
-    def get_csv_iter(self, encoding, delimiter: str):
-        clean_delim = delimiter.strip() if delimiter not in [" ", "\t"] else delimiter
-        with open(self.file_path, 'r', encoding=encoding, errors="ignore") as f:
-            for line in f:
-                self.lastLine = line  # Always keep track of last line
-                if len(line) < 131072:
-                    if len(delimiter) > 1:
-                        yield line.replace(delimiter, clean_delim).strip()
-                    else:
-                        yield line.strip()
+        return fieldnames
+
+
+    @staticmethod
+    def _line_parser_worker(input_q: multiprocessing.Queue, output_q: multiprocessing.Queue, fieldnames: List[str], delimiter: str):
+        while True:
+            line = input_q.get()
+
+            # Shutdown signal
+            if line == utils.multithreading.LINE_PARSER_SENTINEL:
+                output_q.put(utils.multithreading.FILE_READER_SENTINEL)
+                break
+
+            if not line or not line.strip():
+                continue
+
+            try:
+                # We use split(delimiter) here for speed. 
+                # Note: If your CSV uses quotes to wrap delimiters (e.g. "City, State"), 
+                # you should use next(csv.reader([line], delimiter=delimiter)) instead.
+                parts = line.split(delimiter)
+
+                if fieldnames and len(parts) == len(fieldnames):
+                    # Standard Success Path: Create the dict and strip whitespace from values
+                    row = {
+                        fieldnames[i]: parts[i].strip() 
+                        for i in range(len(fieldnames))
+                    }
+                    output_q.put(row)
                 else:
-                    logger.warning("Line too long %s", line)
+                    # Fallback Path: Line is malformed or column count is off
+                    logger.warning("Malformed row or column mismatch. Using UnknownParser: %s", line[:100].strip())
+                    
+                    # Use the logic from your parsers.unknown module
+                    fallback_data = extract_with_unknown_parser(line)
+                    
+                    if fallback_data:
+                        output_q.put(fallback_data)
 
-    def extract_with_unknown_parser(self, line):
-        """Fallback parser for a single line using UnknownParser logic."""
-        ir = Record()
-        for email in EMAIL_REGEX.findall(line):
-            ir.add_or_set_value("emails", email)
-        for email in URL_ENCODED_EMAIL_REGEX.findall(line):
-            decoded_email = urllib.parse.unquote(email)
-            ir.add_or_set_value("emails", decoded_email)
-        for url in URL_REGEX.findall(line):
-            ir.add_or_set_value("urls", url)
-        for sha1 in SHA1_REGEX.findall(line):
-            ir.add_or_set_value("passwords", sha1)
-        for sha256 in SHA256_REGEX.findall(line):
-            ir.add_or_set_value("passwords", sha256)
-        for sha512 in SHA512_REGEX.findall(line):
-            ir.add_or_set_value("passwords", sha512)
-        for bcrypt in BCRYPT_REGEX.findall(line):
-            ir.add_or_set_value("passwords", bcrypt)
-        for ip in IPV4_REGEX.findall(line):
-            ir.add_or_set_value("ips", ip)
-        ir.add_or_set_value("line", line.strip())
-        return ir.to_dict()
+            except Exception as e:
+                logger.error(f"Worker Exception on line '{line[:50]}...': {e}")
+                # Final attempt to save the data via unknown parser
+                try:
+                    fallback_data = extract_with_unknown_parser(line)
+                    if fallback_data:
+                        output_q.put(fallback_data)
+                except:
+                    pass
+
+    @staticmethod
+    def _file_reader_worker(file_path: str, encoding: str, delimiter: str, 
+                            input_q: multiprocessing.Queue, num_workers: int):
+        try:
+            with open(file_path, 'r', encoding=encoding, errors="ignore") as f:
+                next(f, None) 
+                
+                for line in f:
+                    clean_line = line.strip()
+                    if clean_line:
+                        input_q.put(clean_line)
+        except Exception as e:
+            logger.error(f"Reader Process Error: {e}")
+        finally:
+            # Tell EVERY worker thread to stop
+            for _ in range(num_workers):
+                input_q.put(utils.multithreading.LINE_PARSER_SENTINEL)
+
+    def stop_parse(self):
+        logger.debug("Stopping CSV parser threads...")
+        if self.reader_p and self.reader_p.is_alive():
+            self.reader_p.terminate()
+            self.reader_p.join(0.1)
+
+        for w in self.worker_ps:
+            if w.is_alive():
+                w.terminate()
+                w.join(0.1)
 
     def get_itr(self):
-        encoding, has_bom = self.detect_encoding_and_bom()
+        encoding, _ = self.detect_encoding_and_bom()
         delimiter = self.detect_delimiter(encoding)
+        
+        # Ensure fieldnames we have field names
+        detected_fields = self.detect_fieldnames(encoding, delimiter)
+        fieldnames = self.headers.split(',') if self.headers else detected_fields
 
-        logger.debug("Detected %s CSV with delimiter %s", encoding, delimiter)
-        if delimiter is None:
-            logger.error("Unable to detect delimiter for file: %s", self.file_path)
-            exit(-1)
+        if not delimiter:
+            logger.error("Could not detect delimiter.")
+            return
 
-        cleaned_delimiter = delimiter.strip() if delimiter not in ["\t", " "] else delimiter
-        fieldnames = self.headers.split(',') if self.headers else None
-        logger.info("Using CSV field names: %s", fieldnames)
+        self.input_q = multiprocessing.Queue(maxsize=utils.multithreading.QUEUE_BUFFER_SIZE)
+        self.output_q = multiprocessing.Queue(maxsize=utils.multithreading.QUEUE_BUFFER_SIZE)
 
-        reader = csv.DictReader(self.get_csv_iter(encoding, delimiter), delimiter=cleaned_delimiter, fieldnames=fieldnames)
+        self.reader_p = multiprocessing.Process(
+            target=self._file_reader_worker,
+            args=(self.file_path, encoding, delimiter, self.input_q, self.num_threads)
+        )
+        self.reader_p.daemon = True
+        self.reader_p.start()
 
-        for row in reader:
-            try:
-                if row and all(k is not None for k in row):
-                    yield {k: v.strip() for k, v in row.items() if k is not None and v is not None}
+        self.worker_ps = []
+        for _ in range(self.num_threads):
+            p = multiprocessing.Process(
+                target=self._line_parser_worker, 
+                args=(self.input_q, self.output_q, fieldnames, delimiter)
+            )
+            p.daemon = True
+            p.start()
+            self.worker_ps.append(p)
+
+        # 3. Yield for base_parser until we are done processing
+        finished_workers = 0
+        try:
+            while finished_workers < self.num_threads:
+                item = self.output_q.get()
+                
+                # We use the sentinel to count how many workers have finished
+                if item == utils.multithreading.FILE_READER_SENTINEL:
+                    finished_workers += 1
                 else:
-                    logger.warning("Malformed CSV row, using UnknownParser fallback: %s", self.lastLine.strip())
-                    yield self.extract_with_unknown_parser(self.lastLine)
-            except Exception:
-                logger.warning("CSV parsing error, using UnknownParser fallback: %s %s", self.lastLine.strip(), traceback.format_exc())
-
-                yield self.extract_with_unknown_parser(self.lastLine)
+                    yield item
+        finally:
+            self.stop_parse()

@@ -15,21 +15,22 @@ class BaseParser:
 
     detectedFields = {}
 
-    def __init__(self, file_path, output_path=None, source=None, threads=4, dry_run=False, headers="", recency_year=None):
+    def __init__(self, file_path, args):
         self.file_path = file_path
-        self.num_threads = threads
-        self.dry_run = dry_run
-        self.headers = headers
-        self.source = source
-        self.recency_year = recency_year
+        self.num_threads = args.threads
+        self.dry_run = args.dry_run
+        self.headers = args.headers
+        self.source = args.source
+        self.recency_year = args.recency_year
+        self.no_output = args.no_output
 
         if self.recency_year is not None:
             logger.info("Using user defined recency year %s when not detected from data", self.recency_year)
 
-        if output_path and os.path.isdir(output_path):
-            self.output_path = os.path.join(output_path, os.path.basename(file_path) + ".jsonl")
+        if args.output and os.path.isdir(args.output):
+            self.output_path = os.path.join(args.output, os.path.basename(file_path) + ".jsonl")
         else:
-            self.output_path = output_path if output_path else file_path + ".jsonl"
+            self.output_path = args.output if args.output else file_path + ".jsonl"
 
     def associate_key(self, key):
         return parsers.mappings.mappings.get_mapping(key, self.detectedFields)
@@ -162,9 +163,8 @@ class BaseParser:
             finally:
                 it.close()
 
-        if record_count == 0:
-            logger.info(f"No records found in file: {self.file_path}")
-            # Delete the empty output file
+        if record_count == 0 or self.no_output:
+            logger.info(f"No records found in file or no output specified: {self.file_path}")
             if os.path.exists(self.output_path):
                 os.remove(self.output_path)
         else:

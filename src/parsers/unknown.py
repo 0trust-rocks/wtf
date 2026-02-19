@@ -9,6 +9,30 @@ from utils.regex import EMAIL_REGEX, URL_ENCODED_EMAIL_REGEX, URL_REGEX, SHA1_RE
 from parsers.base_parser import BaseParser
 from ir.record import Record
 
+
+def extract_with_unknown_parser(line):
+        """Fallback parser for a single line using UnknownParser logic."""
+        ir = Record()
+        for email in EMAIL_REGEX.findall(line):
+            ir.add_or_set_value("emails", email)
+        for email in URL_ENCODED_EMAIL_REGEX.findall(line):
+            decoded_email = urllib.parse.unquote(email)
+            ir.add_or_set_value("emails", decoded_email)
+        for url in URL_REGEX.findall(line):
+            ir.add_or_set_value("urls", url)
+        for sha1 in SHA1_REGEX.findall(line):
+            ir.add_or_set_value("passwords", sha1)
+        for sha256 in SHA256_REGEX.findall(line):
+            ir.add_or_set_value("passwords", sha256)
+        for sha512 in SHA512_REGEX.findall(line):
+            ir.add_or_set_value("passwords", sha512)
+        for bcrypt in BCRYPT_REGEX.findall(line):
+            ir.add_or_set_value("passwords", bcrypt)
+        for ip in IPV4_REGEX.findall(line):
+            ir.add_or_set_value("ips", ip)
+        ir.add_or_set_value("line", line.strip())
+        return ir.to_dict()
+
 class UnknownParser(BaseParser):
     _EXTENSIONS = [".txt"]
     _IS_WILDCARD = True

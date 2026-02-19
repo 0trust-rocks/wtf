@@ -78,7 +78,6 @@ def get_all_custom_handlers():
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
                     if callable(attr) and attr_name == 'extract':
-                        logger.debug("Found new custom field handler %s", filename)
                         custom_handlers[filename] = attr
                         break
             except Exception as e:
