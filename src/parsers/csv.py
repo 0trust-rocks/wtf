@@ -201,13 +201,11 @@ class CSVParser(BaseParser):
             p.start()
             self.worker_ps.append(p)
 
-        # 3. Yield for base_parser until we are done processing
         finished_workers = 0
         try:
             while finished_workers < self.num_threads:
                 item = self.output_q.get()
                 
-                # We use the sentinel to count how many workers have finished
                 if item == utils.multithreading.FILE_READER_SENTINEL:
                     finished_workers += 1
                 else:
