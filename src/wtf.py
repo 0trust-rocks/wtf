@@ -45,7 +45,6 @@ def main():
                 files.append(file_path)
 
         if args.output:
-            # Create output directory if it doesn't exist
             os.makedirs(args.output, exist_ok=True)
 
     elif os.path.isfile(args.input):
@@ -66,7 +65,6 @@ def main():
 
                 if not parser_class:
                     logger.error(f"No parser found for file extension: {file_extension}")
-                    # Attempt to fingerprint the file and find a matching parser
                     fingerprint = fingerprint_type(file)
                     logger.info(f"Fingerprint for file {file}: {fingerprint}")
 
@@ -91,7 +89,7 @@ def main():
                     exit(-1)
 
             parser = parser_class(file, args=args)
-            parser.parse()
+            parser.start_extraction()
         except Exception as e:
             logger.error(f"Error processing file: %s\nError: %s", file, traceback.format_exc())
 
