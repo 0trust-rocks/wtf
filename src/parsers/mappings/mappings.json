@@ -44,7 +44,7 @@
     "priority": false
   },
   "address": {
-    "values": ["address", "street_address", "street-address", "streetaddress", "addr", "street1", "street2"],
+    "values": ["address", "address2",  "street_address", "street-address", "streetaddress", "addr", "street1", "street2"],
     "priority": true
   },
   "houseNumber": {
@@ -59,7 +59,7 @@
     "values": ["unit", "unitdesgnator", "unitdesignatornumber"]
   },
   "country": {
-    "values": ["country", "country code", "countrycode", "person_location_country"],
+    "values": ["country", "country code", "countrycode", "country_code", "person_location_country"],
     "priority": true
   },
   "state": {
@@ -74,9 +74,13 @@
     "values": ["postal_code", "postal-code", "postalcode", "postal code", "zip", "zip4", "zip_code", "zip-code", "zipcode", "zip code", "postcode"],
     "priority": true
   },
-  "latLon": {
-    "values": ["latitude_longitude", "latitude-longitude", "lat_lon", "lat-lon", "latlon", "location"],
+  "latLong": {
+    "values": ["latitude_longitude", "latitude-longitude", "lat_lon", "lat-lon", "latlon", "location", "latlong"],
     "priority": true
+  },
+  "accuracy_radius": {
+    "values": ["accuracy_radius"],
+    "priority": false
   },
   "autoMake": {
     "values": ["auto_make", "auto-make", "automake", "car_make", "car-make", "carmake"],
@@ -110,16 +114,20 @@
     "values": ["email", "email_address", "email-address", "emails", "paypal_email", "person_email"],
     "priority": true
   },
+  "isp": {
+    "values": ["carrier", "isp"],
+    "priority": false
+  },
   "phoneNumbers": {
     "values": ["phone_number", "phone-number", "phone", "phone_numbers", "phones", "phonenumbers", "phonenumber", "phone number"],
     "priority": true
   },
   "usernames": {
-    "values": ["username", "user_name", "user-name", "usernames", "name", "openid", "skype"],
+    "values": ["username", "user_name", "user-name", "usernames", "name", "openid", "skype", "screen_name", "handle"],
     "priority": true
   },
   "ips": {
-    "values": ["ip", "ip_address", "ip-address", "ipaddress", "ips", "ip_addresses", "ip-addresses", "ipaddress", "userip", "last_ip"],
+    "values": ["ip", "ip_address", "ip-address", "ipaddress", "ips", "ip_addresses", "ip-addresses", "ipaddress", "userip", "last_ip", "registration_ip"],
     "priority": true
   },
   "domains": {
@@ -135,7 +143,7 @@
     "priority": false
   },
   "passwords": {
-    "values": ["password", "passwords", "md5password"],
+    "values": ["password", "passwords", "md5password", "crypted_password", "salt"],
     "priority": true
   },
   "source": {
@@ -159,7 +167,7 @@
     "priority": false
   },
   "notes": {
-    "values": ["filename"],
+    "values": ["filename", "notes"],
     "priority": false
   },
   "line": {

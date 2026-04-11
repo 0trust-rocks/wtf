@@ -3,7 +3,7 @@ import pkgutil
 import importlib
 from utils.logs import get_logger
 
-logger = get_logger(__name__) # will show postprocess in log
+logger = get_logger(__name__)
 
 class LazyProcRegistry:
     def __init__(self, package_path, package_name):

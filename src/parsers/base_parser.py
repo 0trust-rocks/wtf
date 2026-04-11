@@ -132,6 +132,8 @@ class BaseParser:
                     
                     if line:
                         f.write(line + b"\n")
+
+                f.close()
         except Exception as e:
             logger.error(f"Writer Process Error: {e}")
         finally:
@@ -166,7 +168,7 @@ class BaseParser:
                         else:
                             values = [{"id": str(uuid4())}]
                     else:
-                        values = parsers.mappings.mappings.get_value(mapped_key, key, value, record) if (value is not None and value != "" and value != "-" and value != '""' and value != "NULL" and value != "null" and value != "unknown") else None
+                        values = parsers.mappings.mappings.get_value(mapped_key, key, value, record) if (value is not None and value != "" and value != "-" and value != '""' and value != "NULL" and value != "null" and value != "unknown" and value != 0) else None
 
                     keys_to_remove.append(key)
 

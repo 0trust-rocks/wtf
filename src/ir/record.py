@@ -19,8 +19,7 @@ class Record:
     dobYear: Optional[int] = None
     dobMonth: Optional[int] = None
     dobDay: Optional[int] = None
-
-    party: Optional[str] = None # ?
+    party: Optional[str] = None 
     
     # Location Information
     houseNumber: Optional[str] = None
@@ -56,6 +55,7 @@ class Record:
     domain: Optional[str] = None
     asn: Optional[int] = None
     asnOrg: Optional[str] = None
+    isp: Optional[str] = None
     accuracy_radius: Optional[int] = None
     links: List[str] = field(default_factory=list)
 
@@ -165,6 +165,7 @@ class Record:
                     setattr(self, key, value)
             else:
                 if isinstance(current_value, str):
-                    setattr(self, key, current_value + " " + value.lower())
+                    if (current_value.lower() != value.lower()):
+                        setattr(self, key, current_value + " " + value.lower())
                 else:
                     setattr(self, key, value)

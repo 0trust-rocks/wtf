@@ -1,5 +1,6 @@
 from utils.logs import get_logger
 from dateutil import parser
+import re
 
 logger = get_logger(__name__)
 
@@ -20,6 +21,25 @@ def extract(dob_string: str, original_key: str, original_dict: dict):
         })
         
     except (ValueError, OverflowError, TypeError) as e:
-        logger.warning("Could not parse DOB: %s. Error: %s", dob_string, e)
+        dob_parts = re.split(r'[\/\-\s,]+', dob_string) 
 
+        if len(dob_parts) == 3:
+            m, d, y = dob_parts
+            try:
+                if int(m) != 0:
+                    results.append({"dobMonth": int(m)})
+            except ValueError:
+                pass
+
+            try:
+                if int(d) != 0:
+                    results.append({"dobDay": int(d)})
+            except ValueError:
+                pass
+
+            try:
+                if int(y) != 0:
+                    results.append({"dobYear": int(y)})
+            except ValueError:
+                pass
     return results

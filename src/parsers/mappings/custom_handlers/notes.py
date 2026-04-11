@@ -8,7 +8,9 @@ from typing import List
 
 def extract(note: str, original_key: str, original_dict: dict):
     results = []
-
-    results.append({"notes": f"{original_key}: {note}"})
+    if (isinstance(note, list)):
+        results.append({"notes": note})
+    else:
+        results.append({"notes": f"{original_key}: {note}"})
 
     return results
